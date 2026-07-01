@@ -28,11 +28,18 @@ func (h *Handler) Login(c *gin.Context) {
 		})
 		return
 	}
+
+	resp, err := h.service.Login(c.Request.Context(), req)
 	
-	c.JSON(http.StatusOK, gin.H{
-		"message" : "request parsed successfully",
-		"email" : req.Email,
-	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error" : err.Error(),
+		})
+		return
+	}
+	
+	c.JSON(http.StatusOK, resp)
+
 }
 
 
