@@ -28,3 +28,16 @@ func (r *Repository) GetUserByEmail(ctx context.Context, email string) (*databas
 
 	return &user, nil
 }
+
+
+func (r *Repository) GetUserByID(ctx context.Context, id uint) (*database.User, error){
+	var user database.User
+
+	err := r.db.WithContext(ctx).Where("ID = ?", id).First(&user).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil 
+}

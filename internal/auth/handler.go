@@ -49,7 +49,16 @@ func (h *Handler )Logout(c *gin.Context){
 
 
 func (h *Handler)Me(c *gin.Context){
-	c.JSON(http.StatusOK, gin.H{
-		"message" : "the me section of the page",
-	})
+	userID := c.GetUint("userID")
+
+	resp, err := h.service.Me(c.Request.Context(), userID)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error" : err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, resp)
 }

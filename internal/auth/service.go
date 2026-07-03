@@ -39,8 +39,23 @@ func (s *Service) Login(ctx context.Context, req LoginRequest) (*LoginResponse, 
 	if err != nil {
 		return nil, err
 	}
-	
+  
 	return &LoginResponse{
 		AccessToken: token,
+	}, nil 
+}
+
+func (s *Service) Me(ctx context.Context, userID uint) (*MeResponse, error){
+	user, err := s.repo.GetUserByID(ctx, userID)
+
+	if err != nil {
+		return nil, err 
+	}
+
+	return &MeResponse{
+		ID: user.ID,
+		Name: user.Name,
+		Email: user.Email,
+		Role: string(user.Role),
 	}, nil 
 }
