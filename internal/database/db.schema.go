@@ -13,6 +13,7 @@ const (
 	RoleOpc  UserRole = "opc"
 	RoleApc  UserRole = "apc"
 	RoleCoco UserRole = "coco"
+	RoleGod  UserRole = "god"
 )
 
 type StudentStatus string
