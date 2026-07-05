@@ -7,6 +7,7 @@ import (
 	"github.com/spo-iitk/Magicsheet-backend/internal/auth"
 	"github.com/spo-iitk/Magicsheet-backend/internal/database"
 	"github.com/spo-iitk/Magicsheet-backend/internal/middleware"
+	"github.com/spo-iitk/Magicsheet-backend/internal/sync"
 )
 
 func main() {
@@ -17,24 +18,36 @@ func main() {
 	//creating router
 	r := gin.Default()
 
-	//cors 
+	//cors
 	r.Use(cors.New(middleware.CORS()))
 	api := r.Group("/api")
 
-	//db init
-	db, err := database.InitDB()
+	//database init
+	pibsDB, err := database.InitPIBSDB()
 	if err != nil {
 		panic(err)
 	}
 
-	//depedency injection
-	repo := auth.NewRepository(db)
+	rasDB, err := database.InitRASDB()
+	if err != nil {
+		panic(err)
+	}
+
+	//dependecy injection
+	//auth module
+	repo := auth.NewRepository(pibsDB)
 	service := auth.NewService(repo)
 	handler := auth.NewHandler(service)
 	auth.RegisterRoutes(api, handler)
 
-	//migration
-	if err := database.AutoMigrate(db); err != nil {
+	//sync module
+	syncRepo := sync.NewRepository(pibsDB)
+	rasRepo := sync.NewRASrepository(rasDB)
+	syncService := sync.NewService(syncRepo, rasRepo)
+	syncHandler := sync.NewHandler(syncService)
+	sync.RegisterRoutes(api, syncHandler)
+
+	if err := database.AutoMigrate(pibsDB); err != nil {
 		panic(err)
 	}
 
