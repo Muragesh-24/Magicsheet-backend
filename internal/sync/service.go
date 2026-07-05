@@ -2,7 +2,8 @@ package sync
 
 import (
 	"context"
-	"fmt"
+
+	"time"
 
 	"github.com/spo-iitk/Magicsheet-backend/internal/database"
 )
@@ -20,17 +21,24 @@ func NewService(repo *Repository, rasRepo *RASRepository) *Service {
 }
 
 func (s *Service) SyncProformas(ctx context.Context) error {
-	return nil
-}
-
-func (s *Service) SyncStudents(ctx context.Context) error {
 	rcs, err := s.rasRepo.GetActiveRecruitmentCycles(ctx)
 
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("%+v\n", rcs)
+	for _, rasRc := range rcs {
+		pibsRc := mapRecruitmentCycle(rasRc)
+
+		if err := s.repo.UpsertRecruitmentCycle(ctx, &pibsRc); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *Service) SyncStudents(ctx context.Context) error {
 
 	return nil
 }
@@ -42,5 +50,22 @@ func mapRecruitmentCycle(rc RASRecruitmentCycle) database.RecruitmentCycle {
 		Type:         rc.Type,
 		Phase:        rc.Phase,
 		IsActive:     rc.IsActive,
+	}
+}
+
+func mapProforma(p RASProforma) database.Proforma {
+	return database.Proforma{
+		ID:                 p.ID,
+		RecruitmentCycleID: p.RecruitmentCycleID,
+
+		CompanyID: p.CompanyID,
+
+		Title:       p.CompanyName,
+		RoleOffered: p.Role,
+		Description: p.Profile,
+
+		ProformaType:      "",
+		IsInterviewActive: false,
+		LastSyncedAt:      time.Now(),
 	}
 }

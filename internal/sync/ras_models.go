@@ -29,3 +29,7 @@ type RASProforma struct {
 func (RASRecruitmentCycle) TableName() string {
 	return "recruitment_cycles"
 }
+
+func (RASProforma) TableName() string {
+	return "proformas"
+}

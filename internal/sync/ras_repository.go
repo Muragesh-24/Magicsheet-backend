@@ -32,8 +32,16 @@ func (r *RASRepository) GetActiveRecruitmentCycles(ctx context.Context) ([]RASRe
 	return rcs, nil
 }
 
-func (r *RASRepository) GetProformas(ctx context.Context, rcID uint) {
-	// uses r.applicationDB
+func (r *RASRepository) GetProformas(ctx context.Context, rcID uint) ([]RASProforma, error) {
+	var proforma []RASProforma
+
+	err := r.applicationDB.WithContext(ctx).Where("recruitment_cycle_id = ?", rcID).Find(&proforma).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return proforma, nil
 }
 
 func (r *RASRepository) GetStudents(ctx context.Context) {
