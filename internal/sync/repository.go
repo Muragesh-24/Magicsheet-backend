@@ -33,3 +33,7 @@ func (r *Repository) UpsertRecruitmentCycle(ctx context.Context, rc *database.Re
 
 	return r.db.WithContext(ctx).Model(&existing).Updates(rc).Error
 }
+
+func (r *Repository) CreateSyncLog(ctx context.Context, logEntry *database.SyncLog) error {
+	return r.db.WithContext(ctx).Create(logEntry).Error
+}

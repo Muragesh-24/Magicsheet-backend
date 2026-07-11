@@ -2,6 +2,7 @@ package sync
 
 import (
 	"context"
+	"fmt"
 
 	"time"
 
@@ -20,10 +21,33 @@ func NewService(repo *Repository, rasRepo *RASRepository) *Service {
 	}
 }
 
-func (s *Service) SyncProformas(ctx context.Context) error {
+func (s *Service) SyncProformas(ctx context.Context) (err error) {
+	start := time.Now()
+	recordsCount := 0
+	status := "success"
+	logMessage := ""
+
+	defer func() {
+		logErr := s.repo.CreateSyncLog(ctx, &database.SyncLog{
+			EntityType:   "recruitment_cycles",
+			ExternalID:   "active",
+			Action:       database.SyncAction("synced"),
+			RecordsCount: recordsCount,
+			Status:       status,
+			ErrorMessage: logMessage,
+			SyncDuration: int(time.Since(start).Milliseconds()),
+		})
+
+		if logErr != nil && err == nil {
+			err = logErr
+		}
+	}()
+
 	rcs, err := s.rasRepo.GetActiveRecruitmentCycles(ctx)
 
 	if err != nil {
+		status = "failed"
+		logMessage = err.Error()
 		return err
 	}
 
@@ -31,14 +55,37 @@ func (s *Service) SyncProformas(ctx context.Context) error {
 		pibsRc := mapRecruitmentCycle(rasRc)
 
 		if err := s.repo.UpsertRecruitmentCycle(ctx, &pibsRc); err != nil {
+			status = "failed"
+			logMessage = fmt.Sprintf("recruitment cycle %d: %v", rasRc.ID, err)
 			return err
 		}
+
+		recordsCount++
 	}
 
 	return nil
 }
 
-func (s *Service) SyncStudents(ctx context.Context) error {
+func (s *Service) SyncStudents(ctx context.Context) (err error) {
+	start := time.Now()
+	status := "success"
+	logMessage := ""
+
+	defer func() {
+		logErr := s.repo.CreateSyncLog(ctx, &database.SyncLog{
+			EntityType:   "students",
+			ExternalID:   "bulk",
+			Action:       database.SyncAction("synced"),
+			RecordsCount: 0,
+			Status:       status,
+			ErrorMessage: logMessage,
+			SyncDuration: int(time.Since(start).Milliseconds()),
+		})
+
+		if logErr != nil && err == nil {
+			err = logErr
+		}
+	}()
 
 	return nil
 }
